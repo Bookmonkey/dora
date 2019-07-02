@@ -1,0 +1,6 @@
+{
+  "name": "Dora",
+  "bin": {
+    "dora": "./src/index.js"
+  }
+}
