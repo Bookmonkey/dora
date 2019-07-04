@@ -2,5 +2,9 @@
   "name": "Dora",
   "bin": {
     "dora": "./src/index.js"
+  },
+  "dependencies": {
+    "commander": "^2.20.0",
+    "inquirer": "^6.4.1"
   }
 }
