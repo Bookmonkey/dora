@@ -12,7 +12,7 @@ module.exports = {
       "type": "input",
     },
     {
-      "name": "Plural name",
+      "name": "pluralName",
       "message": "Plural name:",
       "type": "input",
     },

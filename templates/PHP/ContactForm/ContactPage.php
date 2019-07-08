@@ -1,6 +1,6 @@
 <?php
 
-namespace NAMESPACE\Pages;
+namespace {{#NAMESPACE}}\Pages;
 
 use Page;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorField;

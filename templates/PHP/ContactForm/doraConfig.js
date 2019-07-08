@@ -2,6 +2,11 @@ module.exports = {
   'template': 'SS_ContactForm',
   "questions": [
     {
+      "name": "namespace",
+      "message": "Namespace of Object",
+      "type": "input",
+    },
+    {
       "name": "tableName",
       "message": "Table name:",
       "type": "input",

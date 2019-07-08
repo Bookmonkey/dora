@@ -3,9 +3,9 @@
 namespace NAMESPACE;
 
 class DataObjectName extends DataObject {
-	private static $table_name = '';
-	private static $singular_name = '';
-	private static $plural_name = '';
+	private static $table_name = '{{ #tableName }}';
+	private static $singular_name = '{{ #singularName }}';
+	private static $plural_name = '{{ #pluralName }}';
 	private static $searchable_fields = [];
 	private static $summary_fields =[];
 
@@ -13,11 +13,7 @@ class DataObjectName extends DataObject {
 	private static $has_one = [];
 	private static $has_many = []; 
 
-	private static $db = [
-		"Title" => "Text",
-		"Content" => "Text",
-		"SortOrder" => "Int"
-	];
+	private static $db = {{ #fields }}
 
 	private static $default_sort = "SortOrder ASC";
 }
