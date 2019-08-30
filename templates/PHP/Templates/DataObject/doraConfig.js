@@ -1,19 +1,15 @@
 module.exports = {
   'template': 'SS_DataObject',
+  'language': 'PHP',
   "questions": [
+    {
+      "name": "namespace",
+      "message": "Namespace",
+      "type": "input"
+    },
     {
       "name": "tableName",
       "message": "Table name:",
-      "type": "input",
-    },
-    {
-      "name": "singularName",
-      "message": "Singular name:",
-      "type": "input",
-    },
-    {
-      "name": "pluralName",
-      "message": "Plural name:",
       "type": "input",
     },
     {
@@ -22,6 +18,5 @@ module.exports = {
       "type": "input",
       "afterAnswerHandler": "createArray",
     },
-    
   ],
 }

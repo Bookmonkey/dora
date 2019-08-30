@@ -5,7 +5,6 @@ const promisify = require('util').promisify;
 const fs = require("fs");
 const process = require("process");
 
-
 // should just use a promise lib like bluebird 
 const statPromise = promisify(fs.stat);
 const mkdirPromise = promisify(fs.mkdir);
@@ -20,13 +19,47 @@ let Template = {
   BASE_TEMPLATES_DIR: path.join(__dirname, "..", "templates"),
   CREATE_TEMPLATES: path.join(__dirname, "..", ".dora"),
   list() {
-    console.log(this.BASE_TEMPLATES_DIR);
-    return [];
+    const walk = async (dir, directoryList = "") => {
+      const files = await readdirPromise(dir);
+
+      for (file of files) {
+        const filepath = path.join(dir, file);
+        const stat = await statPromise(filepath);
+        
+        if (stat.isDirectory()) {
+
+          directoryList.push(filepath);
+          directoryList = await walk(filepath, directoryList);
+        }
+      }
+      return directoryList;
+    }
+
+    return walk(this.BASE_TEMPLATES_DIR, []);
   },
   // just to get the process 
-  getByName(templateName) {
-    // need to scan templates directory
-    return templateName;
+  async getByName(templateName) {
+    const walk = async (templateName, dir, foundDirectory = "") => {
+      const files = await readdirPromise(dir);
+
+      for (file of files) {
+        const filepath = path.join(dir, file);
+        const stat = await statPromise(filepath);
+        
+        if (stat.isDirectory()) {
+          if(file === templateName){
+            foundDirectory = filepath;
+          }
+          else {
+            foundDirectory = await walk(templateName, filepath, foundDirectory);
+          }
+        }
+      }
+          
+      return foundDirectory;
+    }
+    
+    return await walk(templateName, this.BASE_TEMPLATES_DIR, false);    
   },
 
   lineHasKey(line, key) {
@@ -36,9 +69,7 @@ let Template = {
   async create(config, answers){
     try {
       let newTemplatePath = path.join(this.CREATE_TEMPLATES, config.template);
-      let doraTemplatePath = path.join(__dirname, config.filePath);
-
-      console.log(answers);
+      let doraTemplatePath = config.filePath;
       await mkdirPromise(newTemplatePath);
 
       readdirPromise(doraTemplatePath)
@@ -49,7 +80,6 @@ let Template = {
           const writeStream = fs.createWriteStream(path.join(newTemplatePath, file), {
             encoding: "utf8"
           });
-
 
           let reader = require('readline').createInterface({
             input: fs.createReadStream(path.join(doraTemplatePath, file))
@@ -66,21 +96,15 @@ let Template = {
             }
             writeStream.write(line + "\n");
           });
-          
         });
       })
       .catch(error => {
         console.error(error)
       });
-      // await copyFiles();
 
     } catch (error) {
       console.error(error);
     }
-
-    // make new directory and copy template
-    // write where {{#NAME}} (answer key)
-    // if failure, stop and die
   }
 }
 
@@ -91,26 +115,39 @@ let Config = {
     .then(stat => true)
     .catch(error => false);
   },
-  handle(path) {
-    const config = require(path);
+
+  handle(config) {
     return inquirer
       .prompt(config.questions)
       .then(answers => {
         anwsers = this.handleAfterAnswers(config, answers);
-        return {
-          config,
-          answers
-        }
+        return answers;
       });
   },
 
   // returns the new formatted answers object
-  handleAfterAnswers(config, answers){
+  handleAfterAnswers(config, answers) {
     config.questions.map(ele => {
       let answerHandler = ele.afterAnswerHandler
       if(answerHandler){
         if(answerHandler === 'createArray'){
-          answers[ele.name] = answers[ele.name].split(',');
+
+          if(config.language === "PHP"){ 
+            let arrayElements = answers[ele.name].trim().split(',');
+            let arrayFormat = `[
+                ${
+                  arrayElements.map(element => {
+                    let split = element.split(":");
+                    return `"${split[0].trim()}" => "${split[1].trim()}"`
+                  })
+                }
+              ]
+            `;
+
+            arrayFormat = arrayFormat.replace(',', ", \n");
+
+            answers[ele.name] = arrayFormat;
+          }
         }
       }
     });
@@ -120,11 +157,16 @@ let Config = {
 }
 
 program
-  .command("list")
+  .command("explore")
+  .alias("e")
   .alias("l")
   .description("List all templates")
-  .action((cmd, args) => {
-    let list = Template.list();
+  .action(async (cmd, args) => {
+    let list = await Template.list();
+
+    list.map(ele => {
+      console.log(ele);
+    });
   });
 
 program
@@ -132,20 +174,22 @@ program
   .alias("f")
   .description("Fetch the template")
   .action(async (template, args) => {
-    let filePath = Template.getByName(template);
-    
-    // temp for dev purpoces
-    let configPath = path.join(__dirname, filePath, "doraConfig.js");
+    let filePath = await Template.getByName(template);
 
-    const validPath = await Config.validatePath(configPath);
+    let configPath = path.join(filePath, "doraConfig.js");
 
+    const validPath = await Config.validatePath(configPath);    
     if(validPath){
-      let result = await Config.handle(configPath);
+      const config = require(configPath);
+      console.log(`Creating a new Template using ${config.template}, language ${config.language}`)
 
-      result.config.filePath = filePath;
+      let result = await Config.handle(config);
+      config.filePath = filePath;
 
       console.log("Creating new template");
-      Template.create(result.config, result.answers);
+      Template.create(config, result);
+
+      console.log("Created new template :)");
     }
     else {
       console.error("Full file path:", configPath);
