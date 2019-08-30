@@ -5,10 +5,33 @@ const statPromise = promisify(fs.stat);
 const inquirer = require("inquirer");
 
 const ConfigHandler = {
-  validatePath(path){
-    return statPromise(path)
-    .then(stat => true)
-    .catch(error => false);
+  REQUIRED_KEYS: ["template", "language", "questions"],
+
+  async validate(path){
+
+    // validates there is a doraConfig.js file. if not bail out
+    let pathExisits = await statPromise(path);
+    if(!pathExisits) throw new Error(`The DoraConfig couldnt be found`);
+
+
+    // compare config with required keys
+    let config = require(path);
+    let keys = Object.keys(config);
+    let hasMissingKey = false;
+    let missingKeys = [];
+
+    this.REQUIRED_KEYS.map(ele => {
+      if(keys.indexOf(ele) === -1) {
+        hasMissingKey = true;
+        missingKeys.push(ele);
+      }
+    });
+
+    if(hasMissingKey) {
+      throw new Error(`The DoraConfig file is missing the following key: ${missingKeys}`);
+    }
+
+    return true;
   },
 
   handle(config) {
@@ -48,6 +71,10 @@ const ConfigHandler = {
     });
 
     return answers;
+  },
+
+  hasRequirements(config) {
+    // if(config.requirements)
   }
 }
 module.exports = ConfigHandler;
