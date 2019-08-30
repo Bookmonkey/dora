@@ -1,17 +1,32 @@
 # Dora 
 A command line tool which allows you to create reusable components/templates for projects.
 
-Build using
+### Built using:
 - NodeJS
 - CommanderJS
 
-Templates should use {{#NAME}} for values that need to be overwritten
-
-Commands:
-dora fetch template
-dora list
+### Commands:
+- dora fetch [template] 
+- `dora explore` - logs out all the directories within the templates directory.
 
 
-Dora Config
+### DoraConfig example
+``` json
+  {
+    "template": "...",
+    "language": "...", 
+    "requirements": [
+      "npm" [...],
+      "composer": [...]
+    ],
 
-{{#name}} = 
+    "questions": [
+      { 
+        "name": '...',
+        "message": '...',
+        "afterAnswerHandler": "..." // todo allow for either string or array of options
+      }
+    ]
+
+  }
+```
