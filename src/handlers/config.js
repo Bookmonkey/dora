@@ -4,6 +4,8 @@ const fs = require("fs");
 const statPromise = promisify(fs.stat);
 const inquirer = require("inquirer");
 
+const CONSTANTS = require("../constants");
+
 const ConfigHandler = {
   REQUIRED_KEYS: ["template", "language", "questions"],
 
@@ -73,8 +75,30 @@ const ConfigHandler = {
     return answers;
   },
 
-  hasRequirements(config) {
-    // if(config.requirements)
+  handleRequirements(config) {
+    if(config.requirements){
+      if(config.requirements.npm){
+        await inquirer.prompt([CONSTANTS.INSTALL_NPM_PROMPT])
+        .then(answer => {
+          console.log(answer);
+          if(answer.install){
+            console.log("Installing NPM modules");
+          } else {
+            console.log("NPM modules not installed!")
+          }
+        });
+      }
+      if(config.requirements.composer){
+        await inquirer.prompt([CONSTANTS.INSTALL_COMPOSER_PROMPT])
+        .then(answer => {
+          console.log(answer);
+          if(answer.install){
+            console.log("Installing Composer modules");
+          } else {
+            console.log("Composer modules not installed!")
+          }
+      }
+    }
   }
 }
 module.exports = ConfigHandler;

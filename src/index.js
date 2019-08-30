@@ -25,34 +25,36 @@ program
   .alias("f")
   .description("Fetch the template")
   .action(async (template, args) => {
-    
-    try {      
+    try {
       let filePath = await Template.getByName(template);
 
-      if(!filePath) throw Error(`${template} could not be found in the templates directory.`);
+      if (!filePath)
+        throw Error(
+          `${template} could not be found in the templates directory.`
+        );
 
       let configPath = path.join(filePath, "doraConfig.js");
-      const validPath = await Config.validate(configPath);  
+      const validPath = await Config.validate(configPath);
 
-      if(validPath){
+      if (validPath) {
         const config = require(configPath);
-        console.log(`Creating a new Template using ${config.template}, language ${config.language}`)
-  
+        console.log(
+          `Creating a new Template using ${config.template}, language ${
+            config.language
+          }`
+        );
+
         let result = await Config.handle(config);
         config.filePath = filePath;
-  
+
         console.log("Creating new template");
         Template.create(config, result);
+
+        // Config.handleRequirements();
       }
-    }
-    catch(e) {
+    } catch (e) {
       console.error(e);
     }
-
-    // else {
-    //   console.error("Full file path:", configPath);
-    //   throw "There is a problem with the template, either doesnt exist or there is no doraConfig.js file";
-    // }
   });
 
 program.parse(process.argv);
